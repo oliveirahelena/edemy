@@ -67,6 +67,13 @@ const Register = () => {
             {loading ? <SyncOutlined spin /> : "Submit"}
           </button>
         </form>
+
+        <p className="text-center p-3">
+          Already registered?{" "}
+          <Link href="/login">
+            <a>Login</a>
+          </Link>
+        </p>
       </div>
     </>
   );
