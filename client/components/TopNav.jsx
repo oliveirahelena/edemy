@@ -2,17 +2,18 @@ import { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { Menu } from 'antd';
 import Link from 'next/link';
-import { AppstoreOutlined, LoginOutlined, LogoutOutlined, UserAddOutlined } from '@ant-design/icons';
+import { AppstoreOutlined, CoffeeOutlined, LoginOutlined, LogoutOutlined, UserAddOutlined } from '@ant-design/icons';
 import { Context } from '../context';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
 
-const { Item } = Menu;
+const { Item, SubMenu } = Menu;
 
 const TopNav = () => {
     const [current, setCurrent] = useState("/");
 
     const { state, dispatch } = useContext(Context);
+    const { user } = state;
 
     const router = useRouter();
 
@@ -35,19 +36,29 @@ const TopNav = () => {
                     <a>App</a>
                 </Link>
             </Item>
-            <Item key="/login" onClick={(e) => setCurrent(e.key)} icon={<LoginOutlined />}>
-                <Link href="/login">
-                    <a>Login</a>
-                </Link>
-            </Item>
-            <Item key="/register" onClick={(e) => setCurrent(e.key)} icon={<UserAddOutlined />}>
-                <Link href="/register">
-                    <a>Register</a>
-                </Link>
-            </Item>
-            <Item key="/logout" onClick={logout} icon={<LogoutOutlined />} className="float-end" >
-                Logout
-            </Item>
+            
+            {user === null && (
+                <>
+                    <Item key="/login" onClick={(e) => setCurrent(e.key)} icon={<LoginOutlined />}>
+                        <Link href="/login">
+                            <a>Login</a>
+                        </Link>
+                    </Item>
+                    <Item key="/register" onClick={(e) => setCurrent(e.key)} icon={<UserAddOutlined />}>
+                        <Link href="/register">
+                            <a>Register</a>
+                        </Link>
+                    </Item>
+                </>
+            )}
+
+            {user !== null && (
+                <SubMenu className="float-end" icon={<CoffeeOutlined />} title={user && user.name}>
+                    <Item key="/logout" onClick={logout} icon={<LogoutOutlined />} >
+                        Logout
+                    </Item>
+                </SubMenu>
+            )}
         </Menu>
     )
 }
