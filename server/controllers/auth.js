@@ -1,6 +1,14 @@
 import jwt from 'jsonwebtoken';
+import AWS from 'aws-sdk';
 import User from '../models/user';
 import { hashPassword, comparePassword } from '../utils/auth';
+
+const awsConfig = {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_ACCESS_KEY_ID,
+    region: process.env.AWS_ACCESS_KEY_ID,
+    apiVersion: process.env.AWS_ACCESS_KEY_ID,
+}
 
 export const register = async (req, res) => {
     try {
@@ -66,6 +74,15 @@ export const currentUser = async (req, res) => {
     try {
         const user = await User.findById(req.auth._id).select('-password').exec();
         console.log("CURRENT USER", user);
+        return res.json({ ok: true });
+    } catch (err) {
+        console.log(err);
+        return res.status(400).send("Error. Try again.");
+    }
+}
+
+export const sendTestEmail = async (req, res) => {
+    try {
         return res.json({ ok: true });
     } catch (err) {
         console.log(err);
