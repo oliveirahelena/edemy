@@ -4,11 +4,13 @@ import User from '../models/user';
 import { hashPassword, comparePassword } from '../utils/auth';
 
 const awsConfig = {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_ACCESS_KEY_ID,
-    region: process.env.AWS_ACCESS_KEY_ID,
-    apiVersion: process.env.AWS_ACCESS_KEY_ID,
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION,
+    apiVersion: process.env.AWS_API_VERSION,
 }
+
+const SES = new AWS.SES(awsConfig);
 
 export const register = async (req, res) => {
     try {
@@ -81,11 +83,44 @@ export const currentUser = async (req, res) => {
     }
 }
 
-export const sendTestEmail = async (req, res) => {
+export const forgotPassword = (req, res) => {
     try {
-        return res.json({ ok: true });
+        const { email } = req.body;
+        console.log(email);
+        
     } catch (err) {
         console.log(err);
-        return res.status(400).send("Error. Try again.");
     }
+    return;
+    const params = {
+        Source: process.env.EMAIL_FROM,
+        Destination: {
+            ToAddresses: [process.env.EMAIL_FROM],
+        },
+        ReplyToAddresses: [process.env.EMAIL_FROM],
+        Message: {
+            Body: {
+                Html: {
+                    Charset: "UTF-8",
+                    Data: `
+                        <html>
+                            <h1>Reset password link</h1>
+                            <p>Please use the following link to reset your password</p>
+                        </html>
+                    `
+                }
+            },
+            Subject: {
+                Charset: "UTF-8",
+                Data: "Password reset link"
+            }
+        }
+    }
+    const emailSent = SES.sendEmail(params).promise();
+    emailSent.then((data) => {
+        console.log(data);
+        res.json({ ok: true })
+    }).catch((err) => {
+        console.log(err);
+    });
 }
