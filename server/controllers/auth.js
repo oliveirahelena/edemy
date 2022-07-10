@@ -83,44 +83,59 @@ export const currentUser = async (req, res) => {
     }
 }
 
-export const forgotPassword = (req, res) => {
+export const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
-        console.log(email);
-        
-    } catch (err) {
-        console.log(err);
-    }
-    return;
-    const params = {
-        Source: process.env.EMAIL_FROM,
-        Destination: {
-            ToAddresses: [process.env.EMAIL_FROM],
-        },
-        ReplyToAddresses: [process.env.EMAIL_FROM],
-        Message: {
-            Body: {
-                Html: {
-                    Charset: "UTF-8",
-                    Data: `
-                        <html>
-                            <h1>Reset password link</h1>
-                            <p>Please use the following link to reset your password</p>
-                        </html>
-                    `
-                }
+        const shortCode = Math.random().toString(36).substring(6).toUpperCase();
+        const user = await User.findOneAndUpdate({ email: email }, { passwordResetCode: shortCode});
+        if (!user) return res.status(404).send("User not found");
+        const params = {
+            Source: process.env.EMAIL_FROM,
+            Destination: {
+                ToAddresses: [email],
             },
-            Subject: {
-                Charset: "UTF-8",
-                Data: "Password reset link"
+            ReplyToAddresses: [process.env.EMAIL_FROM],
+            Message: {
+                Body: {
+                    Html: {
+                        Charset: "UTF-8",
+                        Data: `
+                            <html>
+                                <h1>Reset password</h1>
+                                <p>Please use the following code to reset your password</p>
+                                <h2 style="color: red;">${shortCode}</h2>
+                                <i>edemy.com</i>
+                            </html>
+                        `
+                    }
+                },
+                Subject: {
+                    Charset: "UTF-8",
+                    Data: "Reset Password"
+                }
             }
         }
-    }
-    const emailSent = SES.sendEmail(params).promise();
-    emailSent.then((data) => {
-        console.log(data);
-        res.json({ ok: true })
-    }).catch((err) => {
+        const emailSent = SES.sendEmail(params).promise();
+        emailSent.then((data) => {
+            console.log(data);
+            res.json({ ok: true })
+        }).catch((err) => {
+            console.log(err);
+        });
+    } catch (err) {
         console.log(err);
-    });
+    } 
+}
+
+export const resetPassword = async (req, res) => {
+    try {
+        const {email, code, newPassword} = req.body;
+        const hashedPassword = await hashPassword(newPassword);
+        const user = await User.findOneAndUpdate({ email, passwordResetCode: code }, { password: hashedPassword, passwordResetCode: "" }).exec();
+        if (!user) return res.status(404).send("User not found");
+        return res.json({ ok: true });
+    } catch (err) {
+        console.log(err);
+        return res.status(400).send("Error. Try again.");
+    }
 }

@@ -26,15 +26,35 @@ const ForgotPassword = () => {
         e.preventDefault();
         setLoading(true);
         try {
-          const { data } = await axios.post(`/api/forgot-password`, {
-            email,
-          });
-          setSuccess(true);
-          toast.success("Check your email for the secret code");
-          setLoading(false);
+            const { data } = await axios.post(`/api/forgot-password`, {
+                email,
+            });
+            setSuccess(true);
+            toast.success("Check your email for the secret code");
+            setLoading(false);
         } catch (err) {
-          toast.error(err.response.data);
-          setLoading(false);
+            toast.error(err.response.data);
+            setLoading(false);
+        }
+    };
+
+    const handleResetPassword = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const { data } = await axios.post(`/api/reset-password`, {
+                email,
+                code,
+                newPassword,
+            });
+            toast.success("Great! Now you can login with your new password");
+            setEmail('');
+            setCode('');
+            setNewPassword('');
+            setLoading(false);
+        } catch (err) {
+            toast.error(err.response.data);
+            setLoading(false);
         }
     };
 
@@ -42,7 +62,7 @@ const ForgotPassword = () => {
         <>
             <h1 className="p-5 text-center jumbotron">Forgot Password</h1>
             <div className="container col-md-4 offset-md-4 pb-5">
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={success ? handleResetPassword : handleSubmit}>
                     <input
                         type="email"
                         className="form-control mb-4 p-4"
@@ -51,6 +71,26 @@ const ForgotPassword = () => {
                         placeholder="Enter email"
                         required
                     />
+                    {success && (
+                        <>
+                            <input
+                                type="text"
+                                className="form-control mb-4 p-4"
+                                value={code}
+                                onChange={(e) => setCode(e.target.value)}
+                                placeholder="Enter secret code"
+                                required
+                            />
+                            <input
+                                type="password"
+                                className="form-control mb-4 p-4"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                placeholder="Enter new password"
+                                required
+                            />
+                        </>
+                    )}
                     <button
                         type="submit"
                         className="btn btn-primary btn-block"
@@ -59,7 +99,7 @@ const ForgotPassword = () => {
                         {loading ? <SyncOutlined spin /> : "Submit"}
                     </button>
                 </form>
-        </div>
+            </div>
         </>
     )
 }
